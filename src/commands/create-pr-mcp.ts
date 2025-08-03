@@ -61,7 +61,7 @@ export async function createPRMCPCommand(storyId: string) {
     try {
       await execAsync(`git rev-parse --verify origin/${branch}`);
       // Branch exists, check if it's up to date
-      const { stdout: behind } = await execAsync(`git rev-list --count HEAD..origin/${branch}`);
+      const { stdout: _behind } = await execAsync(`git rev-list --count HEAD..origin/${branch}`);
       const { stdout: ahead } = await execAsync(`git rev-list --count origin/${branch}..HEAD`);
       
       if (parseInt(ahead.trim()) > 0) {
@@ -137,7 +137,7 @@ function generatePRBody(story: StoryData): string {
 
   if (story.tasks && story.tasks.length > 0) {
     body += `### Tasks Completed\n\n`;
-    story.tasks.forEach((task, index) => {
+    story.tasks.forEach((task, _index) => {
       const status = task.completed ? '✅' : '⬜';
       body += `${status} ${task.description}`;
       if (task.prNumber) {

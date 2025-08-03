@@ -1,6 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import type { StoryData } from '../types/story.js';
 
 export class GitHubMCPService {
   private client: Client;
@@ -67,11 +66,11 @@ export class GitHubMCPService {
     });
 
     if (result.error) {
-      throw new Error(`MCP error ${result.error.code}: ${result.error.message}`);
+      throw new Error(`MCP error ${(result.error as any).code}: ${(result.error as any).message}`);
     }
 
     // Extract the content from the MCP response
-    const content = result.content[0];
+    const content = (result.content as any)[0];
     if (content.type === 'text') {
       // Parse the JSON response from the text content
       try {
@@ -140,7 +139,7 @@ export class GitHubMCPService {
     });
 
     if (result.error) {
-      throw new Error(`Failed to push branch: ${result.error.message}`);
+      throw new Error(`Failed to push branch: ${(result.error as any).message}`);
     }
   }
 
@@ -165,7 +164,7 @@ export class GitHubMCPService {
     });
 
     // If branch doesn't exist, we need to create it
-    if (getBranchResult.error && getBranchResult.error.message.includes('Not Found')) {
+    if (getBranchResult.error && (getBranchResult.error as any).message.includes('Not Found')) {
       // Get the default branch SHA to branch from
       const getRepoResult = await this.client.callTool({
         name: 'get_repository',
@@ -176,11 +175,11 @@ export class GitHubMCPService {
       });
 
       if (getRepoResult.error) {
-        throw new Error(`Failed to get repository info: ${getRepoResult.error.message}`);
+        throw new Error(`Failed to get repository info: ${(getRepoResult.error as any).message}`);
       }
 
       // Parse the default branch
-      const repoData = JSON.parse(getRepoResult.content[0].text);
+      const repoData = JSON.parse((getRepoResult.content as any)[0].text);
       const defaultBranch = repoData.default_branch;
 
       // Get the SHA of the default branch
@@ -194,10 +193,10 @@ export class GitHubMCPService {
       });
 
       if (getDefaultBranchResult.error) {
-        throw new Error(`Failed to get default branch: ${getDefaultBranchResult.error.message}`);
+        throw new Error(`Failed to get default branch: ${(getDefaultBranchResult.error as any).message}`);
       }
 
-      const defaultBranchData = JSON.parse(getDefaultBranchResult.content[0].text);
+      const defaultBranchData = JSON.parse((getDefaultBranchResult.content as any)[0].text);
       const baseSha = defaultBranchData.commit.sha;
 
       // Create the new branch
@@ -212,7 +211,7 @@ export class GitHubMCPService {
       });
 
       if (createBranchResult.error) {
-        throw new Error(`Failed to create branch: ${createBranchResult.error.message}`);
+        throw new Error(`Failed to create branch: ${(createBranchResult.error as any).message}`);
       }
     }
   }

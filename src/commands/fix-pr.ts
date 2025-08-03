@@ -129,7 +129,7 @@ export async function fixPRCommand(prNumber: string) {
   }
 }
 
-function generateActionItems(prDetails: any, status: any, comments: any[]): ActionItem[] {
+function generateActionItems(_prDetails: any, status: any, comments: any[]): ActionItem[] {
   const items: ActionItem[] = [];
 
   // 1. Status check failures (highest priority)
@@ -173,7 +173,7 @@ function generateActionItems(prDetails: any, status: any, comments: any[]): Acti
 
   // 4. Code review comments (medium priority)
   const reviewComments = comments.filter(c => c.is_review_comment);
-  reviewComments.forEach((comment, index) => {
+  reviewComments.forEach((comment, _index) => {
     // Skip bot comments and very old comments
     if (comment.user.includes('bot') || isOldComment(comment.created_at)) {
       return;

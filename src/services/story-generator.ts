@@ -128,7 +128,7 @@ Generate the complete story specification now:`;
 
   async generateStoryPrompt(
     feature: FeatureData,
-    analysis: AnalysisResult,
+    _analysis: AnalysisResult,
     storyType: {
       type: "user-story" | "task" | "bug";
       title: string;

@@ -231,7 +231,6 @@ async function updateStoryFile(storyData: StoryData): Promise<void> {
   const lines = storyContent.split("\n");
   const updatedLines: string[] = [];
   let inTasksSection = false;
-  let tasksInserted = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -252,14 +251,12 @@ async function updateStoryFile(storyData: StoryData): Promise<void> {
 
       // Add updated tasks
       updatedLines.push("");
-      storyData.tasks?.forEach((task, index) => {
-        const taskNumber = index + 1;
+      storyData.tasks?.forEach((task, _index) => {
         const checkbox = task.completed ? "[x]" : "[ ]";
         const prInfo = task.prNumber ? ` (#${task.prNumber})` : "";
         updatedLines.push(`- ${checkbox} ${task.description}${prInfo}`);
       });
 
-      tasksInserted = true;
 
       // Skip existing task lines
       while (

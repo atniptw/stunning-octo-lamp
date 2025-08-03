@@ -32,7 +32,7 @@ export async function addTasksCommand(storyId: string) {
     // Show current tasks if any
     if (storyData.tasks && storyData.tasks.length > 0) {
       console.log("\n" + chalk.bold("Current Tasks:"));
-      storyData.tasks.forEach((task, i) => {
+      storyData.tasks.forEach((task, _i) => {
         const status = task.completed ? chalk.green("✓") : chalk.gray("○");
         const prInfo = task.prNumber ? chalk.dim(` (#${task.prNumber})`) : "";
         console.log(`  ${status} ${task.description}${prInfo}`);

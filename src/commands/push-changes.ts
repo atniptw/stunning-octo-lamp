@@ -47,7 +47,7 @@ export async function pushChangesCommand(message?: string) {
     
     // Commit changes
     spinner.text = 'Creating commit...';
-    const { stdout: commitOutput } = await execAsync(`git commit -m "${commitMessage}"`);
+    await execAsync(`git commit -m "${commitMessage}"`);
     
     // Extract commit hash
     const commitHash = await getLatestCommitHash();
@@ -124,7 +124,6 @@ async function getLatestCommitHash(): Promise<string> {
 
 function getGitStatusColor(status: string) {
   const first = status[0];
-  const second = status[1];
   
   if (first === 'A') return chalk.green; // Added
   if (first === 'M') return chalk.yellow; // Modified

@@ -4,7 +4,6 @@ import { GitHubMCPService } from '../services/github-mcp.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
-import path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -105,7 +104,7 @@ export async function gitPushMCPCommand() {
     
     if (error.message.includes('404')) {
       console.log(chalk.yellow('\nBranch may not exist on remote. Create it first with:'));
-      console.log(chalk.dim('  git push -u origin ' + currentBranch));
+      console.log(chalk.dim('  git push -u origin $(git branch --show-current)'));
     }
     
     process.exit(1);
