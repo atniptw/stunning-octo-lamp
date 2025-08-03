@@ -70,9 +70,15 @@ export async function fixPRCommand(prNumber: string) {
     // Get PR information
     spinner.text = "Gathering PR status and feedback...";
     const [prDetails, status, comments] = await Promise.all([
-      (service as unknown as GitHubServiceWithPRMethods).getPullRequestDetails(prNum),
-      (service as unknown as GitHubServiceWithPRMethods).checkPullRequestStatus(prNum),
-      (service as unknown as GitHubServiceWithPRMethods).getPullRequestComments(prNum),
+      (service as unknown as GitHubServiceWithPRMethods).getPullRequestDetails(
+        prNum,
+      ),
+      (service as unknown as GitHubServiceWithPRMethods).checkPullRequestStatus(
+        prNum,
+      ),
+      (service as unknown as GitHubServiceWithPRMethods).getPullRequestComments(
+        prNum,
+      ),
     ]);
 
     spinner.succeed("PR analysis complete");
@@ -208,7 +214,10 @@ export async function fixPRCommand(prNumber: string) {
     console.log("\n" + chalk.dim("=".repeat(60)));
   } catch (error: unknown) {
     spinner.fail("Failed to analyze PR");
-    console.error(chalk.red("\nError:"), error instanceof Error ? error.message : String(error));
+    console.error(
+      chalk.red("\nError:"),
+      error instanceof Error ? error.message : String(error),
+    );
     process.exit(1);
   }
 }
@@ -221,9 +230,7 @@ function generateActionItems(
   const items: ActionItem[] = [];
 
   // 1. Status check failures (highest priority)
-  const failedChecks = status.checks.filter(
-    (c) => c.conclusion === "failure",
-  );
+  const failedChecks = status.checks.filter((c) => c.conclusion === "failure");
   failedChecks.forEach((check, index: number) => {
     items.push({
       id: `status_${index}`,

@@ -70,21 +70,21 @@ export async function checkPRCommand(prNumber: string) {
 
     // Get PR details
     spinner.text = "Getting PR information...";
-    const prDetails: PRDetails = await (service as unknown as GitHubServiceWithPRMethods).getPullRequestDetails(
-      prNum,
-    );
+    const prDetails: PRDetails = await (
+      service as unknown as GitHubServiceWithPRMethods
+    ).getPullRequestDetails(prNum);
 
     // Get status information
     spinner.text = "Checking status and reviews...";
-    const status: PRStatus = await (service as unknown as GitHubServiceWithPRMethods).checkPullRequestStatus(
-      prNum,
-    );
+    const status: PRStatus = await (
+      service as unknown as GitHubServiceWithPRMethods
+    ).checkPullRequestStatus(prNum);
 
     // Get comments
     spinner.text = "Loading comments...";
-    const comments: PRComment[] = await (service as unknown as GitHubServiceWithPRMethods).getPullRequestComments(
-      prNum,
-    );
+    const comments: PRComment[] = await (
+      service as unknown as GitHubServiceWithPRMethods
+    ).getPullRequestComments(prNum);
 
     spinner.succeed("Pull request information loaded");
 
@@ -253,7 +253,10 @@ export async function checkPRCommand(prNumber: string) {
     console.log("\n" + chalk.bold.blue("=".repeat(80)));
   } catch (error: unknown) {
     spinner.fail("Failed to check pull request");
-    console.error(chalk.red("\nError:"), error instanceof Error ? error.message : String(error));
+    console.error(
+      chalk.red("\nError:"),
+      error instanceof Error ? error.message : String(error),
+    );
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes("Not Found")) {

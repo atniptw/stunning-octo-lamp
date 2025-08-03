@@ -40,10 +40,18 @@ export async function commentPRCommand(prNumber: string, message: string) {
       await service.updateIssueStatus(prNumber, "in-progress"); // This adds a comment
 
       // Add the actual comment
-      await addPRComment(service as unknown as GitHubServiceWithOctokit, prNum, message);
+      await addPRComment(
+        service as unknown as GitHubServiceWithOctokit,
+        prNum,
+        message,
+      );
     } else {
       const service = new GitHubService();
-      await addPRComment(service as unknown as GitHubServiceWithOctokit, prNum, message);
+      await addPRComment(
+        service as unknown as GitHubServiceWithOctokit,
+        prNum,
+        message,
+      );
     }
 
     spinner.succeed("Comment added successfully");
@@ -53,7 +61,10 @@ export async function commentPRCommand(prNumber: string, message: string) {
     console.log("\n" + chalk.dim("View on GitHub to see the comment"));
   } catch (error: unknown) {
     spinner.fail("Failed to add comment");
-    console.error(chalk.red("\nError:"), error instanceof Error ? error.message : String(error));
+    console.error(
+      chalk.red("\nError:"),
+      error instanceof Error ? error.message : String(error),
+    );
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes("Not Found")) {
@@ -68,7 +79,11 @@ export async function commentPRCommand(prNumber: string, message: string) {
   }
 }
 
-async function addPRComment(service: GitHubServiceWithOctokit, prNumber: number, message: string) {
+async function addPRComment(
+  service: GitHubServiceWithOctokit,
+  prNumber: number,
+  message: string,
+) {
   // Use the GitHub API to add an issue comment (PRs are issues in GitHub API)
   const octokit = service.octokit;
   const owner = service.owner;
