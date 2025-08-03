@@ -93,7 +93,7 @@ export async function createStoriesCommand(
       ],
     });
 
-    let storiesToCreate: Array<{
+    const storiesToCreate: Array<{
       type: StoryType;
       title: string;
       description: string;
