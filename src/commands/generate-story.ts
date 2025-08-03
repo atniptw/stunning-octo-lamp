@@ -6,7 +6,7 @@ import { GitHubService } from "../services/github.js";
 import { LocalGitHubService } from "../services/local-github.js";
 import { AnalysisService } from "../services/analysis.js";
 import { StoryGeneratorService } from "../services/story-generator.js";
-import type { IssueData } from "../types/story.js";
+// IssueData type removed - using inline type definitions
 
 interface GenerateStoryOptions {
   source: string;
