@@ -194,8 +194,39 @@ export async function createPRCommand(storyId: string) {
       } catch {
         // Ignore error when listing stories
       }
+    } else if (error.message.includes("422") || error.message.includes("Validation Failed")) {
+      console.error(chalk.red("\nError: Invalid pull request data"));
+      console.log(chalk.dim("Common causes:"));
+      console.log(chalk.dim("- Branch already has an open pull request"));
+      console.log(chalk.dim("- No differences between head and base branch"));
+      console.log(chalk.dim("- Invalid branch names"));
+      if (error.message) {
+        console.log(chalk.gray(`\nDetails: ${error.message}`));
+      }
+    } else if (error.message.includes("401") || error.message.includes("Bad credentials")) {
+      console.error(chalk.red("\nError: Authentication failed"));
+      console.log(chalk.dim("Check your GitHub token permissions:"));
+      console.log(chalk.dim("- Token must have 'repo' scope"));
+      console.log(chalk.dim("- Token must not be expired"));
+      console.log(chalk.dim("- Repository must be accessible"));
+    } else if (error.message.includes("403") || error.message.includes("rate limit")) {
+      console.error(chalk.red("\nError: GitHub API access denied"));
+      console.log(chalk.dim("Possible causes:"));
+      console.log(chalk.dim("- Rate limit exceeded (wait and retry)"));
+      console.log(chalk.dim("- Insufficient repository permissions"));
+      console.log(chalk.dim("- Organization restrictions"));
+    } else if (error.message.includes("404") || error.message.includes("Not Found")) {
+      console.error(chalk.red("\nError: Repository or branch not found"));
+      console.log(chalk.dim("Verify:"));
+      console.log(chalk.dim("- Repository exists and is accessible"));
+      console.log(chalk.dim("- Branch names are correct"));
+      console.log(chalk.dim("- You have access to the repository"));
     } else {
-      console.error(chalk.red("\nError:"), error.message);
+      console.error(chalk.red("\nError creating pull request:"), error.message);
+      console.log(chalk.dim("\nIf this error persists:"));
+      console.log(chalk.dim("- Check your network connection"));
+      console.log(chalk.dim("- Verify GitHub service status"));
+      console.log(chalk.dim("- Try again in a few minutes"));
     }
 
     process.exit(1);
