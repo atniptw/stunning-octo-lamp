@@ -2,6 +2,8 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { LocalGitHubService } from '../services/local-github.js';
 import { GitHubService } from '../services/github.js';
+import { GitHubAppService } from '../services/github-app.js';
+import { GitHubMCPService } from '../services/github-mcp.js';
 import type { StoryData } from '../types/story.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -57,11 +59,13 @@ export async function createPRCommand(storyId: string) {
     const prTitle = generatePRTitle(storyData);
     const prBody = generatePRBody(storyData);
 
-    // Check if we're in mock mode or real GitHub mode
+    // Determine which GitHub service to use
     const githubToken = process.env.GITHUB_TOKEN;
     const githubRepo = process.env.GITHUB_REPO;
+    const useGitHubApp = process.env.GITHUB_APP_ID && process.env.GITHUB_APP_PRIVATE_KEY_PATH;
+    const useMCP = process.env.USE_GITHUB_MCP === 'true';
 
-    if (!githubToken || !githubRepo) {
+    if (!githubRepo || (!githubToken && !useGitHubApp) || githubToken === 'test_token') {
       // Mock mode - create local PR file
       spinner.text = 'Creating local pull request (mock mode)...';
       const prNumber = await localService.createPullRequest(storyId, prTitle, prBody);
@@ -71,22 +75,57 @@ export async function createPRCommand(storyId: string) {
       console.log(chalk.blue('Number:'), `#${prNumber}`);
       console.log(chalk.blue('Title:'), prTitle);
       console.log(chalk.blue('File:'), chalk.dim(`.github/pulls/${prNumber}.md`));
-      console.log('\n' + chalk.yellow('Note: This is a mock PR. Set GITHUB_TOKEN and GITHUB_REPO to create real PRs.'));
+      console.log('\n' + chalk.yellow('Note: This is a mock PR. Configure GitHub authentication to create real PRs.'));
     } else {
-      // Real GitHub mode
-      const githubService = new GitHubService();
-      const pr = await githubService.createPullRequest({
-        title: prTitle,
-        body: prBody,
-        head: await getCurrentBranch(),
-        base: 'main'
-      });
+      // Real GitHub mode - choose service based on configuration
+      let pr: { number: number; title: string; html_url: string; state: string };
+      
+      if (useMCP) {
+        // Use MCP server
+        spinner.text = 'Creating pull request via GitHub MCP...';
+        const mcpService = new GitHubMCPService();
+        try {
+          pr = await mcpService.createPullRequest({
+            title: prTitle,
+            body: prBody,
+            head: await getCurrentBranch(),
+            base: 'main'
+          });
+        } finally {
+          await mcpService.disconnect();
+        }
+      } else if (useGitHubApp) {
+        // Use GitHub App
+        spinner.text = 'Creating pull request via GitHub App...';
+        const appService = new GitHubAppService();
+        pr = await appService.createPullRequest({
+          title: prTitle,
+          body: prBody,
+          head: await getCurrentBranch(),
+          base: 'main'
+        });
+      } else {
+        // Use personal access token
+        spinner.text = 'Creating pull request via GitHub API...';
+        const githubService = new GitHubService();
+        pr = await githubService.createPullRequest({
+          title: prTitle,
+          body: prBody,
+          head: await getCurrentBranch(),
+          base: 'main'
+        });
+      }
 
       spinner.succeed('Pull request created successfully!');
       console.log('\n' + chalk.bold('Pull Request Details:'));
       console.log(chalk.blue('Number:'), `#${pr.number}`);
       console.log(chalk.blue('Title:'), pr.title);
       console.log(chalk.blue('URL:'), chalk.green(pr.html_url));
+      console.log(chalk.blue('Method:'), chalk.dim(
+        useMCP ? 'GitHub MCP Server' : 
+        useGitHubApp ? 'GitHub App' : 
+        'Personal Access Token'
+      ));
       console.log('\n' + chalk.dim('Open the URL above to view your pull request'));
     }
 
