@@ -1,0 +1,140 @@
+#!/usr/bin/env node
+
+import { Command } from 'commander';
+import chalk from 'chalk';
+import { config } from 'dotenv';
+import { analyzeCommand } from './commands/analyze.js';
+import { generateStoryCommand } from './commands/generate-story.js';
+import { validateStoryCommand } from './commands/validate-story.js';
+
+// Load environment variables
+config();
+
+const program = new Command();
+
+program
+  .name('workflow')
+  .description('AI Workflow Orchestration Tool - Tech Lead Workflow')
+  .version('0.1.0');
+
+// Tech Lead Commands
+program
+  .command('analyze-feature <featureId>')
+  .description('Analyze a feature requirement')
+  .option('-s, --source <source>', 'Source (github, jira, etc)', 'github')
+  .action(async (featureId: string, options: any) => {
+    const { analyzeFeatureCommand } = await import('./commands/analyze-feature.js');
+    await analyzeFeatureCommand(featureId, options);
+  });
+
+program
+  .command('create-stories <featureId>')
+  .description('Create stories from a feature analysis')
+  .option('-s, --source <source>', 'Source (github, jira, etc)', 'github')
+  .action(async (featureId: string, options: any) => {
+    const { createStoriesCommand } = await import('./commands/create-stories.js');
+    await createStoriesCommand(featureId, options);
+  });
+
+// Simple version for testing
+program
+  .command('create-stories-simple <featureId>')
+  .description('Create stories from suggestions (simple version)')
+  .action(async (featureId: string) => {
+    const { createStoriesSimpleCommand } = await import('./commands/create-stories-simple.js');
+    await createStoriesSimpleCommand(featureId);
+  });
+
+// Developer Commands
+program
+  .command('show-story <storyId>')
+  .description('Show detailed story information')
+  .action(async (storyId: string) => {
+    const { showStoryCommand } = await import('./commands/show-story.js');
+    await showStoryCommand(storyId);
+  });
+
+program
+  .command('add-tasks <storyId>')
+  .description('Add task breakdown to a story')
+  .action(async (storyId: string) => {
+    const { addTasksCommand } = await import('./commands/add-tasks.js');
+    await addTasksCommand(storyId);
+  });
+
+program
+  .command('update-task <storyId> <taskId>')
+  .description('Update a task (complete, add PR, edit)')
+  .action(async (storyId: string, taskId: string) => {
+    const { updateTaskCommand } = await import('./commands/update-task.js');
+    await updateTaskCommand(storyId, taskId);
+  });
+
+program
+  .command('create-pr <storyId>')
+  .description('Create a pull request for a completed story')
+  .action(async (storyId: string) => {
+    const { createPRCommand } = await import('./commands/create-pr.js');
+    await createPRCommand(storyId);
+  });
+
+// List commands
+program
+  .command('list-features')
+  .description('List available features')
+  .action(async () => {
+    const { listFeaturesCommand } = await import('./commands/list-features.js');
+    await listFeaturesCommand();
+  });
+
+program
+  .command('list-stories')
+  .description('List available stories')
+  .action(async () => {
+    const { listStoriesCommand } = await import('./commands/list-stories.js');
+    await listStoriesCommand();
+  });
+
+// Legacy support (keeping old commands for now)
+program
+  .command('analyze <id>')
+  .description('Analyze a feature (legacy command)')
+  .action(async (id: string) => {
+    const { analyzeFeatureCommand } = await import('./commands/analyze-feature.js');
+    await analyzeFeatureCommand(id, { source: 'github' });
+  });
+
+program
+  .command('list')
+  .description('List features (legacy command)')
+  .action(async () => {
+    const { listFeaturesCommand } = await import('./commands/list-features.js');
+    await listFeaturesCommand();
+  });
+
+// Config command
+program
+  .command('config <key> [value]')
+  .description('Get or set configuration values')
+  .action((key: string, value?: string) => {
+    if (value === undefined) {
+      console.log(chalk.blue(`${key}: ${process.env[key.toUpperCase().replace('.', '_')] || 'not set'}`));
+    } else {
+      console.log(chalk.yellow('Config setting not yet implemented'));
+    }
+  });
+
+// Error handling
+program.exitOverride();
+
+try {
+  program.parse(process.argv);
+} catch (error: any) {
+  if (error.code === 'commander.unknownCommand') {
+    console.error(chalk.red('Unknown command'));
+    program.outputHelp();
+  } else {
+    console.error(chalk.red('Error:'), error.message);
+  }
+  process.exit(1);
+}
