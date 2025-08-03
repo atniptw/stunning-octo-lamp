@@ -117,6 +117,14 @@ program
   });
 
 program
+  .command('create-subissues <parentIssueNumber> [storyId]')
+  .description('Create GitHub subissues from local stories/tasks')
+  .action(async (parentIssueNumber: string, storyId?: string) => {
+    const { createSubissuesCommand } = await import('./commands/create-subissues.js');
+    await createSubissuesCommand(parentIssueNumber, storyId);
+  });
+
+program
   .command('push-changes [message]')
   .description('Commit and push current changes with smart commit message')
   .action(async (message?: string) => {

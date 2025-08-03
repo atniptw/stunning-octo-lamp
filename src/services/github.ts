@@ -143,4 +143,31 @@ export class GitHubService {
       throw new Error(`Failed to create pull request: ${error.message}`);
     }
   }
+
+  async createIssue(params: {
+    title: string;
+    body: string;
+    labels?: string[];
+    assignees?: string[];
+    milestone?: number;
+  }): Promise<{ number: number; html_url: string }> {
+    try {
+      const { data } = await this.octokit.issues.create({
+        owner: this.owner,
+        repo: this.repo,
+        title: params.title,
+        body: params.body,
+        labels: params.labels,
+        assignees: params.assignees,
+        milestone: params.milestone,
+      });
+
+      return {
+        number: data.number,
+        html_url: data.html_url,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to create issue: ${error.message}`);
+    }
+  }
 }
