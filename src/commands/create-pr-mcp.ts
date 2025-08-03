@@ -75,9 +75,7 @@ export async function createPRMCPCommand(storyId: string) {
     try {
       await execAsync(`git rev-parse --verify origin/${branch}`);
       // Branch exists, check if it's up to date
-      await execAsync(
-        `git rev-list --count HEAD..origin/${branch}`,
-      );
+      await execAsync(`git rev-list --count HEAD..origin/${branch}`);
       const { stdout: ahead } = await execAsync(
         `git rev-list --count origin/${branch}..HEAD`,
       );
