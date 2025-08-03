@@ -83,7 +83,7 @@ export class GitHubMCPService {
           html_url: prData.html_url,
           state: prData.state,
         };
-      } catch (e) {
+      } catch {
         throw new Error(`Failed to parse PR response: ${content.text}`);
       }
     }

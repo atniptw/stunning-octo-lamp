@@ -5,8 +5,12 @@
  * Checks if coverage meets minimum requirements defined in package.json
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Default thresholds if not specified in package.json
 const DEFAULT_THRESHOLDS = {
@@ -83,8 +87,7 @@ function main() {
   }
 }
 
-if (require.main === module) {
+// Run if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
-
-module.exports = { main };

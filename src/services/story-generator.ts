@@ -342,7 +342,7 @@ Generate the task breakdown now:`;
       ];
 
       return { structure, patterns, dependencies };
-    } catch (error) {
+    } catch {
       return {
         structure: "Unable to scan project structure",
         patterns: ["Follow existing code patterns in src/"],
@@ -384,7 +384,7 @@ Generate the task breakdown now:`;
       }
 
       return structure.join("\n");
-    } catch (error) {
+    } catch {
       return `${dir}/ (unable to read)`;
     }
   }

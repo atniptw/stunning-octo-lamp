@@ -57,7 +57,7 @@ export async function createStoriesSimpleCommand(featureId: string) {
         console.log(chalk.yellow("\nStory creation cancelled."));
         return;
       }
-    } catch (error) {
+    } catch {
       console.log(chalk.gray("\nStory creation cancelled."));
       return;
     }

@@ -117,7 +117,7 @@ export async function analyzeFeatureCommand(
             chalk.bold(`workflow create-stories ${featureId}`),
         );
       }
-    } catch (error) {
+    } catch {
       // User cancelled prompt, that's fine
       console.log(chalk.gray("\nAnalysis complete."));
     }

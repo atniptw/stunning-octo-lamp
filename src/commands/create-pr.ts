@@ -56,7 +56,7 @@ export async function createPRCommand(storyId: string) {
         console.log(chalk.dim("Make some changes and commit them first."));
         process.exit(1);
       }
-    } catch (error) {
+    } catch {
       // Git commands might fail if remote isn't set up
       spinner.info("Could not verify git status - continuing anyway");
     }
@@ -242,7 +242,7 @@ async function getCurrentBranch(): Promise<string> {
   try {
     const { stdout } = await execAsync("git rev-parse --abbrev-ref HEAD");
     return stdout.trim();
-  } catch (error) {
+  } catch {
     throw new Error("Failed to get current git branch");
   }
 }

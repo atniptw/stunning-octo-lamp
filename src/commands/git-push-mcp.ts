@@ -56,7 +56,7 @@ export async function gitPushMCPCommand() {
             path: filePath,
             content: Buffer.from(content).toString("base64"),
           };
-        } catch (error) {
+        } catch {
           // File might be deleted
           return null;
         }
