@@ -1,36 +1,93 @@
-# This is a basic workflow to help you get started with Actions
+name: Quality Checks
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [ main ]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  quality-checks:
+    name: Quality Checks
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        if: always()
+        run: npm run build
+
+      - name: Run tests
+        if: always()
+        run: npm test
+
+      - name: Generate coverage
+        if: always()
+        run: npm run test:coverage
+
+      - name: Validate coverage
+        if: always()
+        run: node scripts/coverage-check.js
+
+      - name: Check formatting
+        if: always()
+        run: npm run format:check
+
+      - name: Lint code
+        if: always()
+        run: npm run lint
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage/
+          retention-days: 30
+
+      - name: Quality gate status
+        if: always()
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "## ✅ All Quality Checks Passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| Coverage | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| Formatting | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| Linting | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 Ready to merge!" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Quality gate: PASSED"
+            exit 0
+          else
+            echo "## ❌ Quality Checks Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the failed steps above and fix the issues." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 Quick Fixes" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm run format      # Fix formatting issues" >> $GITHUB_STEP_SUMMARY
+            echo "npm run lint:fix    # Fix linting issues" >> $GITHUB_STEP_SUMMARY
+            echo "npm test            # Run tests locally" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Tip**: Run all checks locally before pushing:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm run build && npm test && npm run format:check && npm run lint" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Quality gate: FAILED"
+            exit 1
+          fi
