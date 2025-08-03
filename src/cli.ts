@@ -78,6 +78,23 @@ program
     await createPRCommand(storyId);
   });
 
+program
+  .command('create-pr-mcp <storyId>')
+  .description('Create a pull request via GitHub MCP server (requires branch on remote)')
+  .action(async (storyId: string) => {
+    const { createPRMCPCommand } = await import('./commands/create-pr-mcp.js');
+    await createPRMCPCommand(storyId);
+  });
+
+// MCP tools command
+program
+  .command('list-mcp-tools')
+  .description('List available GitHub MCP server tools')
+  .action(async () => {
+    const { listMCPToolsCommand } = await import('./commands/list-mcp-tools.js');
+    await listMCPToolsCommand();
+  });
+
 // List commands
 program
   .command('list-features')

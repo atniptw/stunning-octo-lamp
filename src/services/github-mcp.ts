@@ -108,6 +108,115 @@ export class GitHubMCPService {
     return result.content;
   }
 
+  async pushBranch(branch: string): Promise<void> {
+    await this.connect();
+
+    const repo = process.env.GITHUB_REPO;
+    if (!repo) {
+      throw new Error('GITHUB_REPO not configured');
+    }
+
+    const [owner, repoName] = repo.split('/');
+    
+    // Get the current commit SHA
+    const { stdout: currentSha } = await import('child_process').then(cp => 
+      new Promise<{stdout: string}>((resolve, reject) => {
+        cp.exec('git rev-parse HEAD', (err, stdout) => {
+          if (err) reject(err);
+          else resolve({stdout: stdout.trim()});
+        });
+      })
+    );
+
+    // The MCP server doesn't have a direct "push" command, but we can create/update a branch ref
+    const result = await this.client.callTool({
+      name: 'create_or_update_reference',
+      arguments: {
+        owner,
+        repo: repoName,
+        ref: `refs/heads/${branch}`,
+        sha: currentSha,
+      },
+    });
+
+    if (result.error) {
+      throw new Error(`Failed to push branch: ${result.error.message}`);
+    }
+  }
+
+  async ensureBranchExists(branch: string): Promise<void> {
+    await this.connect();
+
+    const repo = process.env.GITHUB_REPO;
+    if (!repo) {
+      throw new Error('GITHUB_REPO not configured');
+    }
+
+    const [owner, repoName] = repo.split('/');
+
+    // First, try to get the branch
+    const getBranchResult = await this.client.callTool({
+      name: 'get_branch',
+      arguments: {
+        owner,
+        repo: repoName,
+        branch,
+      },
+    });
+
+    // If branch doesn't exist, we need to create it
+    if (getBranchResult.error && getBranchResult.error.message.includes('Not Found')) {
+      // Get the default branch SHA to branch from
+      const getRepoResult = await this.client.callTool({
+        name: 'get_repository',
+        arguments: {
+          owner,
+          repo: repoName,
+        },
+      });
+
+      if (getRepoResult.error) {
+        throw new Error(`Failed to get repository info: ${getRepoResult.error.message}`);
+      }
+
+      // Parse the default branch
+      const repoData = JSON.parse(getRepoResult.content[0].text);
+      const defaultBranch = repoData.default_branch;
+
+      // Get the SHA of the default branch
+      const getDefaultBranchResult = await this.client.callTool({
+        name: 'get_branch',
+        arguments: {
+          owner,
+          repo: repoName,
+          branch: defaultBranch,
+        },
+      });
+
+      if (getDefaultBranchResult.error) {
+        throw new Error(`Failed to get default branch: ${getDefaultBranchResult.error.message}`);
+      }
+
+      const defaultBranchData = JSON.parse(getDefaultBranchResult.content[0].text);
+      const baseSha = defaultBranchData.commit.sha;
+
+      // Create the new branch
+      const createBranchResult = await this.client.callTool({
+        name: 'create_reference',
+        arguments: {
+          owner,
+          repo: repoName,
+          ref: `refs/heads/${branch}`,
+          sha: baseSha,
+        },
+      });
+
+      if (createBranchResult.error) {
+        throw new Error(`Failed to create branch: ${createBranchResult.error.message}`);
+      }
+    }
+  }
+
   async disconnect(): Promise<void> {
     if (this.connected) {
       await this.client.close();
