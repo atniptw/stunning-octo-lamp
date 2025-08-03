@@ -28,7 +28,7 @@ export class AnalysisService {
       url: requirement.url,
       labels: requirement.labels,
     };
-    
+
     return this.analyzeFeature(featureData);
   }
 

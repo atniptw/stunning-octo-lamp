@@ -1,6 +1,6 @@
-import { createAppAuth } from '@octokit/auth-app';
-import { Octokit } from '@octokit/rest';
-import { readFileSync } from 'fs';
+import { createAppAuth } from "@octokit/auth-app";
+import { Octokit } from "@octokit/rest";
+import { readFileSync } from "fs";
 // IssueData type not needed for GitHub App service
 
 export class GitHubAppService {
@@ -18,30 +18,34 @@ export class GitHubAppService {
 
     if (!appId || !privateKeyPath || !installationId) {
       throw new Error(
-        'GitHub App configuration missing. Set GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY_PATH, and GITHUB_APP_INSTALLATION_ID'
+        "GitHub App configuration missing. Set GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY_PATH, and GITHUB_APP_INSTALLATION_ID",
       );
     }
 
     if (!repoConfig) {
-      throw new Error('GITHUB_REPO environment variable is not set (format: owner/repo)');
+      throw new Error(
+        "GITHUB_REPO environment variable is not set (format: owner/repo)",
+      );
     }
 
     // Parse repository
-    const [owner, repo] = repoConfig.split('/');
+    const [owner, repo] = repoConfig.split("/");
     if (!owner || !repo) {
-      throw new Error('GITHUB_REPO must be in format: owner/repo');
+      throw new Error("GITHUB_REPO must be in format: owner/repo");
     }
 
     this.owner = owner;
     this.repo = repo;
-    this.appName = process.env.GITHUB_APP_NAME || 'AI Workflow Tool';
+    this.appName = process.env.GITHUB_APP_NAME || "AI Workflow Tool";
 
     // Read private key
     let privateKey: string;
     try {
-      privateKey = readFileSync(privateKeyPath, 'utf8');
+      privateKey = readFileSync(privateKeyPath, "utf8");
     } catch (error) {
-      throw new Error(`Failed to read private key from ${privateKeyPath}: ${error}`);
+      throw new Error(
+        `Failed to read private key from ${privateKeyPath}: ${error}`,
+      );
     }
 
     // Create authenticated Octokit instance
@@ -64,7 +68,7 @@ export class GitHubAppService {
     assignee?: string;
   }> {
     try {
-      const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ''));
+      const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ""));
 
       const { data } = await this.octokit.issues.get({
         owner: this.owner,
@@ -75,18 +79,22 @@ export class GitHubAppService {
       return {
         id: String(data.number),
         title: data.title,
-        description: data.body || '',
+        description: data.body || "",
         url: data.html_url,
         labels: data.labels.map((label) =>
-          typeof label === 'string' ? label : label.name || ''
+          typeof label === "string" ? label : label.name || "",
         ),
         assignee: data.assignee?.login,
       };
     } catch (error: any) {
       if (error.status === 404) {
-        throw new Error(`Issue #${issueId} not found in ${this.owner}/${this.repo}`);
+        throw new Error(
+          `Issue #${issueId} not found in ${this.owner}/${this.repo}`,
+        );
       } else if (error.status === 401) {
-        throw new Error('GitHub App authentication failed. Check your app configuration');
+        throw new Error(
+          "GitHub App authentication failed. Check your app configuration",
+        );
       }
       throw new Error(`Failed to fetch issue: ${error.message}`);
     }
@@ -127,14 +135,16 @@ export class GitHubAppService {
       };
     } catch (error: any) {
       if (error.status === 401) {
-        throw new Error('GitHub App authentication failed. Check your app configuration');
+        throw new Error(
+          "GitHub App authentication failed. Check your app configuration",
+        );
       } else if (error.status === 403) {
         throw new Error(
-          'GitHub App lacks permission. Ensure it has "Pull requests: Write" permission'
+          'GitHub App lacks permission. Ensure it has "Pull requests: Write" permission',
         );
       } else if (error.status === 422) {
         throw new Error(
-          `Cannot create PR: ${error.message}. Make sure the branch exists and has commits.`
+          `Cannot create PR: ${error.message}. Make sure the branch exists and has commits.`,
         );
       }
       throw new Error(`Failed to create pull request: ${error.message}`);
@@ -162,8 +172,8 @@ export class GitHubAppService {
     }
   }
 
-  async updateIssueStatus(issueId: string, status: 'in-progress' | 'ready') {
-    const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ''));
+  async updateIssueStatus(issueId: string, status: "in-progress" | "ready") {
+    const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ""));
 
     await this.octokit.issues.createComment({
       owner: this.owner,
@@ -202,7 +212,7 @@ export class GitHubAppService {
         html_url: pr.html_url,
         head: { sha: pr.head.sha, ref: pr.head.ref },
         base: { ref: pr.base.ref },
-        user: { login: pr.user?.login || 'unknown' },
+        user: { login: pr.user?.login || "unknown" },
         created_at: pr.created_at,
         updated_at: pr.updated_at,
       };
@@ -214,13 +224,13 @@ export class GitHubAppService {
   async checkPullRequestStatus(prNumber: number): Promise<{
     mergeable: boolean | null;
     mergeable_state: string;
-    checks: Array<{ 
-          name: string; 
-          status: string; 
-          conclusion: string | null;
-          html_url: string;
-          details_url?: string;
-        }>;
+    checks: Array<{
+      name: string;
+      status: string;
+      conclusion: string | null;
+      html_url: string;
+      details_url?: string;
+    }>;
     reviews: Array<{
       user: string;
       state: string;
@@ -256,13 +266,13 @@ export class GitHubAppService {
           name: check.name,
           status: check.status,
           conclusion: check.conclusion,
-          html_url: check.html_url || '',
+          html_url: check.html_url || "",
           details_url: check.details_url || undefined,
         })),
         reviews: reviews.map((review) => ({
-          user: review.user?.login || 'unknown',
+          user: review.user?.login || "unknown",
           state: review.state,
-          submitted_at: review.submitted_at || '',
+          submitted_at: review.submitted_at || "",
         })),
       };
     } catch (error: any) {
@@ -270,14 +280,16 @@ export class GitHubAppService {
     }
   }
 
-  async getPullRequestComments(prNumber: number): Promise<Array<{
-    id: number;
-    user: string;
-    body: string;
-    created_at: string;
-    html_url: string;
-    is_review_comment: boolean;
-  }>> {
+  async getPullRequestComments(prNumber: number): Promise<
+    Array<{
+      id: number;
+      user: string;
+      body: string;
+      created_at: string;
+      html_url: string;
+      is_review_comment: boolean;
+    }>
+  > {
     try {
       // Get issue comments (general PR comments)
       const { data: issueComments } = await this.octokit.issues.listComments({
@@ -287,25 +299,26 @@ export class GitHubAppService {
       });
 
       // Get review comments (code-specific comments)
-      const { data: reviewComments } = await this.octokit.pulls.listReviewComments({
-        owner: this.owner,
-        repo: this.repo,
-        pull_number: prNumber,
-      });
+      const { data: reviewComments } =
+        await this.octokit.pulls.listReviewComments({
+          owner: this.owner,
+          repo: this.repo,
+          pull_number: prNumber,
+        });
 
       const allComments = [
-        ...issueComments.map(comment => ({
+        ...issueComments.map((comment) => ({
           id: comment.id,
-          user: comment.user?.login || 'unknown',
-          body: comment.body || '',
+          user: comment.user?.login || "unknown",
+          body: comment.body || "",
           created_at: comment.created_at,
           html_url: comment.html_url,
           is_review_comment: false,
         })),
-        ...reviewComments.map(comment => ({
+        ...reviewComments.map((comment) => ({
           id: comment.id,
-          user: comment.user?.login || 'unknown', 
-          body: comment.body || '',
+          user: comment.user?.login || "unknown",
+          body: comment.body || "",
           created_at: comment.created_at,
           html_url: comment.html_url,
           is_review_comment: true,
@@ -313,15 +326,19 @@ export class GitHubAppService {
       ];
 
       // Sort by creation date
-      return allComments.sort((a, b) => 
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      return allComments.sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       );
     } catch (error: any) {
       throw new Error(`Failed to get PR comments: ${error.message}`);
     }
   }
 
-  async mergePullRequest(prNumber: number, mergeMethod: 'merge' | 'squash' | 'rebase' = 'squash'): Promise<void> {
+  async mergePullRequest(
+    prNumber: number,
+    mergeMethod: "merge" | "squash" | "rebase" = "squash",
+  ): Promise<void> {
     try {
       await this.octokit.pulls.merge({
         owner: this.owner,
@@ -331,7 +348,9 @@ export class GitHubAppService {
       });
     } catch (error: any) {
       if (error.status === 405) {
-        throw new Error('Pull request is not mergeable. Check status checks and conflicts.');
+        throw new Error(
+          "Pull request is not mergeable. Check status checks and conflicts.",
+        );
       }
       throw new Error(`Failed to merge PR: ${error.message}`);
     }

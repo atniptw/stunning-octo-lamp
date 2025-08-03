@@ -296,11 +296,11 @@ export class LocalGitHubService {
   ): Promise<number> {
     // Create a mock PR in the local filesystem
     const pullsDir = join(process.cwd(), ".github", "pulls");
-    
+
     // Ensure directory exists
     const { mkdir } = await import("fs/promises");
     await mkdir(pullsDir, { recursive: true });
-    
+
     // Find the next PR number
     try {
       const files = await readdir(pullsDir);
@@ -308,9 +308,9 @@ export class LocalGitHubService {
         .filter((f) => f.endsWith(".md"))
         .map((f) => parseInt(f.replace(".md", "")))
         .filter((n) => !isNaN(n));
-      
+
       const nextNumber = prNumbers.length > 0 ? Math.max(...prNumbers) + 1 : 1;
-      
+
       // Create PR file
       const prContent = `# Pull Request #${nextNumber}
 
@@ -321,10 +321,10 @@ export class LocalGitHubService {
 
 ${body}
 `;
-      
+
       const { writeFile } = await import("fs/promises");
       await writeFile(join(pullsDir, `${nextNumber}.md`), prContent);
-      
+
       return nextNumber;
     } catch (error: any) {
       if (error.code === "ENOENT") {

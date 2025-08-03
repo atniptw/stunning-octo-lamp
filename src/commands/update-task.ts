@@ -257,7 +257,6 @@ async function updateStoryFile(storyData: StoryData): Promise<void> {
         updatedLines.push(`- ${checkbox} ${task.description}${prInfo}`);
       });
 
-
       // Skip existing task lines
       while (
         i + 1 < lines.length &&
