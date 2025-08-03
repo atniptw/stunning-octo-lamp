@@ -206,7 +206,7 @@ function generatePRTitle(story: StoryData): string {
   return `${story.type === "bug" ? "Fix" : "Add"}: ${story.title} (#${story.id})`;
 }
 
-function generatePRBody(story: any): string {
+function generatePRBody(story: StoryData): string {
   let body = `## 📋 Story: ${story.title}\n\n`;
   body += `**Type:** ${story.type}\n`;
   body += `**Feature:** #${story.featureId}\n`;
@@ -218,7 +218,7 @@ function generatePRBody(story: any): string {
 
   if (story.tasks && story.tasks.length > 0) {
     body += `### Tasks Completed\n\n`;
-    story.tasks.forEach((task: any) => {
+    story.tasks.forEach((task) => {
       const status = task.completed ? "✅" : "⬜";
       body += `${status} ${task.description}`;
       if (task.prNumber) {
@@ -227,7 +227,7 @@ function generatePRBody(story: any): string {
       body += "\n";
     });
 
-    const completed = story.tasks.filter((t: any) => t.completed).length;
+    const completed = story.tasks.filter((t) => t.completed).length;
     const total = story.tasks.length;
     body += `\n**Progress:** ${completed}/${total} tasks completed\n`;
   }
