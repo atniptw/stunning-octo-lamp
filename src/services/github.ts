@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import type { IssueData } from "../types/story.js";
+// IssueData type removed - using inline type definition
 
 export class GitHubService {
   private octokit: Octokit;
@@ -31,7 +31,14 @@ export class GitHubService {
     this.repo = repo;
   }
 
-  async fetchIssue(issueId: string): Promise<IssueData> {
+  async fetchIssue(issueId: string): Promise<{
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    labels: string[];
+    assignee?: string;
+  }> {
     try {
       const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ""));
 

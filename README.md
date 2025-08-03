@@ -95,6 +95,27 @@ npm run dev -- create-pr 4-1
 - For real GitHub PRs: Set GITHUB_TOKEN and GITHUB_REPO in .env
 - For mock mode: Leave GITHUB_TOKEN as 'test_token' or unset
 
+### Manage Pull Requests
+
+```bash
+# Check PR status, reviews, and comments
+npm run dev -- check-pr <prNumber>
+
+# Add a comment to a PR
+npm run dev -- comment-pr <prNumber> "<message>"
+
+# Examples
+npm run dev -- check-pr 1
+npm run dev -- comment-pr 1 "Thanks for the review!"
+```
+
+**PR Status Information:**
+- ✅ Merge status and conflicts
+- 🔍 Status check results (build, tests, linting)
+- 👥 Review approvals and change requests  
+- 💬 Recent comments and discussions
+- 🎯 Clear next-step recommendations
+
 ## Development
 
 ```bash
@@ -172,6 +193,8 @@ Implement stories with clear boundaries and tracking:
 2. **Add Tasks** - `workflow add-tasks <storyId>`
 3. **Update Progress** - `workflow update-task <storyId> <taskNumber>`
 4. **Create PR** - `workflow create-pr <storyId>`
+5. **Monitor PR** - `workflow check-pr <prNumber>`
+6. **Engage** - `workflow comment-pr <prNumber> "<message>"`
 
 ## Documentation
 

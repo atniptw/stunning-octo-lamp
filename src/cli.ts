@@ -100,6 +100,30 @@ program
     await commentPRCommand(prNumber, message);
   });
 
+program
+  .command('fix-pr <prNumber>')
+  .description('Show prioritized action items to fix PR issues')
+  .action(async (prNumber: string) => {
+    const { fixPRCommand } = await import('./commands/fix-pr.js');
+    await fixPRCommand(prNumber);
+  });
+
+program
+  .command('push-changes [message]')
+  .description('Commit and push current changes with smart commit message')
+  .action(async (message?: string) => {
+    const { pushChangesCommand } = await import('./commands/push-changes.js');
+    await pushChangesCommand(message);
+  });
+
+program
+  .command('reply-comment <prNumber> <commentId> [commitHash]')
+  .description('Reply to a PR comment with commit reference')
+  .action(async (prNumber: string, commentId: string, commitHash?: string) => {
+    const { replyCommentCommand } = await import('./commands/reply-comment.js');
+    await replyCommentCommand(prNumber, commentId, commitHash);
+  });
+
 // MCP tools command
 program
   .command('list-mcp-tools')
