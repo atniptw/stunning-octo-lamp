@@ -109,6 +109,14 @@ program
   });
 
 program
+  .command('review-issue <issueNumber>')
+  .description('Conduct guided tech lead review of a GitHub issue')
+  .action(async (issueNumber: string) => {
+    const { reviewIssueCommand } = await import('./commands/review-issue.js');
+    await reviewIssueCommand(issueNumber);
+  });
+
+program
   .command('push-changes [message]')
   .description('Commit and push current changes with smart commit message')
   .action(async (message?: string) => {
