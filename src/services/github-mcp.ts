@@ -48,10 +48,17 @@ export class GitHubMCPService {
       throw new Error('GITHUB_REPO not configured');
     }
 
+    // Parse owner and repo from the format "owner/repo"
+    const [owner, repoName] = repo.split('/');
+    if (!owner || !repoName) {
+      throw new Error('GITHUB_REPO must be in format: owner/repo');
+    }
+
     const result = await this.client.callTool({
       name: 'create_pull_request',
       arguments: {
-        repo,
+        owner,
+        repo: repoName,
         title: params.title,
         body: params.body,
         head: params.head,
@@ -60,10 +67,27 @@ export class GitHubMCPService {
     });
 
     if (result.error) {
-      throw new Error(`Failed to create PR: ${result.error}`);
+      throw new Error(`MCP error ${result.error.code}: ${result.error.message}`);
     }
 
-    return result.content as any;
+    // Extract the content from the MCP response
+    const content = result.content[0];
+    if (content.type === 'text') {
+      // Parse the JSON response from the text content
+      try {
+        const prData = JSON.parse(content.text);
+        return {
+          number: prData.number,
+          title: prData.title,
+          html_url: prData.html_url,
+          state: prData.state,
+        };
+      } catch (e) {
+        throw new Error(`Failed to parse PR response: ${content.text}`);
+      }
+    }
+
+    throw new Error('Unexpected response format from MCP server');
   }
 
   async fetchIssue(repo: string, issueNumber: number): Promise<any> {
