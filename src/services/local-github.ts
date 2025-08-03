@@ -72,6 +72,11 @@ export class LocalGitHubService {
     }
   }
 
+  async fetchIssue(issueId: string): Promise<any> {
+    // Delegate to fetchStory for backward compatibility
+    return this.fetchStory(issueId);
+  }
+
   async fetchStory(storyId: string): Promise<StoryData> {
     try {
       // Look for story in all subdirectories
@@ -91,7 +96,7 @@ export class LocalGitHubService {
           if (matchingFile) {
             storyFile = join(typeDir, matchingFile);
             storyContent = await readFile(storyFile, "utf-8");
-            storyType = type.replace("-", "-") as any;
+            storyType = type as "user-story" | "task" | "bug";
             break;
           }
         } catch {
