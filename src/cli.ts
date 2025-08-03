@@ -20,7 +20,7 @@ program
   .command('analyze-feature <featureId>')
   .description('Analyze a feature requirement')
   .option('-s, --source <source>', 'Source (github, jira, etc)', 'github')
-  .action(async (featureId: string, options: any) => {
+  .action(async (featureId: string, options: { source: string }) => {
     const { analyzeFeatureCommand } = await import('./commands/analyze-feature.js');
     await analyzeFeatureCommand(featureId, options);
   });
@@ -29,7 +29,7 @@ program
   .command('create-stories <featureId>')
   .description('Create stories from a feature analysis')
   .option('-s, --source <source>', 'Source (github, jira, etc)', 'github')
-  .action(async (featureId: string, options: any) => {
+  .action(async (featureId: string, options: { source: string }) => {
     const { createStoriesCommand } = await import('./commands/create-stories.js');
     await createStoriesCommand(featureId, options);
   });
@@ -184,12 +184,12 @@ program.exitOverride();
 
 try {
   program.parse(process.argv);
-} catch (error: any) {
-  if (error.code === 'commander.unknownCommand') {
+} catch (error: unknown) {
+  if (error instanceof Error && 'code' in error && error.code === 'commander.unknownCommand') {
     console.error(chalk.red('Unknown command'));
     program.outputHelp();
   } else {
-    console.error(chalk.red('Error:'), error.message);
+    console.error(chalk.red('Error:'), error instanceof Error ? error.message : String(error));
   }
   process.exit(1);
 }

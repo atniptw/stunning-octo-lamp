@@ -2,7 +2,50 @@ import chalk from "chalk";
 import ora from "ora";
 import { GitHubAppService } from "../services/github-app.js";
 import { GitHubService } from "../services/github.js";
-// MCP service not used in this command
+
+interface PRDetails {
+  number: number;
+  title: string;
+  state: string;
+  user: { login: string };
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  head: { ref: string };
+  base: { ref: string };
+}
+
+interface PRStatus {
+  mergeable: boolean | null;
+  mergeable_state: string;
+  checks: Array<{
+    name: string;
+    status: string;
+    conclusion: string | null;
+    details_url?: string;
+    html_url?: string;
+  }>;
+  reviews: Array<{
+    state: string;
+    user: string;
+    submitted_at?: string;
+  }>;
+}
+
+interface PRComment {
+  id: number;
+  user: string;
+  body: string;
+  created_at: string;
+  html_url: string;
+  is_review_comment: boolean;
+}
+
+interface GitHubServiceWithPRMethods {
+  getPullRequestDetails: (prNumber: number) => Promise<PRDetails>;
+  checkPullRequestStatus: (prNumber: number) => Promise<PRStatus>;
+  getPullRequestComments: (prNumber: number) => Promise<PRComment[]>;
+}
 
 export async function checkPRCommand(prNumber: string) {
   const spinner = ora("Fetching pull request details...").start();
@@ -27,19 +70,19 @@ export async function checkPRCommand(prNumber: string) {
 
     // Get PR details
     spinner.text = "Getting PR information...";
-    const prDetails = await (service as GitHubAppService).getPullRequestDetails(
+    const prDetails: PRDetails = await (service as unknown as GitHubServiceWithPRMethods).getPullRequestDetails(
       prNum,
     );
 
     // Get status information
     spinner.text = "Checking status and reviews...";
-    const status = await (service as GitHubAppService).checkPullRequestStatus(
+    const status: PRStatus = await (service as unknown as GitHubServiceWithPRMethods).checkPullRequestStatus(
       prNum,
     );
 
     // Get comments
     spinner.text = "Loading comments...";
-    const comments = await (service as GitHubAppService).getPullRequestComments(
+    const comments: PRComment[] = await (service as unknown as GitHubServiceWithPRMethods).getPullRequestComments(
       prNum,
     );
 
@@ -208,11 +251,12 @@ export async function checkPRCommand(prNumber: string) {
     console.log(chalk.blue("  Web:"), prDetails.html_url);
 
     console.log("\n" + chalk.bold.blue("=".repeat(80)));
-  } catch (error: any) {
+  } catch (error: unknown) {
     spinner.fail("Failed to check pull request");
-    console.error(chalk.red("\nError:"), error.message);
+    console.error(chalk.red("\nError:"), error instanceof Error ? error.message : String(error));
 
-    if (error.message.includes("Not Found")) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("Not Found")) {
       console.log(
         chalk.yellow(
           "\nPR not found. Check the PR number and repository access.",

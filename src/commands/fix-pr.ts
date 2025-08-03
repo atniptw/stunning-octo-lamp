@@ -3,6 +3,44 @@ import ora from "ora";
 import { GitHubAppService } from "../services/github-app.js";
 import { GitHubService } from "../services/github.js";
 
+interface PRDetails {
+  number: number;
+  title: string;
+  html_url: string;
+}
+
+interface PRStatus {
+  mergeable: boolean | null;
+  mergeable_state: string;
+  checks: Array<{
+    name: string;
+    status: string;
+    conclusion: string | null;
+    details_url?: string;
+    html_url?: string;
+  }>;
+  reviews: Array<{
+    state: string;
+    user: string;
+    submitted_at?: string;
+  }>;
+}
+
+interface PRComment {
+  id: number;
+  user: string;
+  body: string;
+  created_at: string;
+  html_url: string;
+  is_review_comment: boolean;
+}
+
+interface GitHubServiceWithPRMethods {
+  getPullRequestDetails: (prNumber: number) => Promise<PRDetails>;
+  checkPullRequestStatus: (prNumber: number) => Promise<PRStatus>;
+  getPullRequestComments: (prNumber: number) => Promise<PRComment[]>;
+}
+
 interface ActionItem {
   id: string;
   type: "status_check" | "review_change" | "comment_response" | "conflict";
@@ -32,9 +70,9 @@ export async function fixPRCommand(prNumber: string) {
     // Get PR information
     spinner.text = "Gathering PR status and feedback...";
     const [prDetails, status, comments] = await Promise.all([
-      (service as GitHubAppService).getPullRequestDetails(prNum),
-      (service as GitHubAppService).checkPullRequestStatus(prNum),
-      (service as GitHubAppService).getPullRequestComments(prNum),
+      (service as unknown as GitHubServiceWithPRMethods).getPullRequestDetails(prNum),
+      (service as unknown as GitHubServiceWithPRMethods).checkPullRequestStatus(prNum),
+      (service as unknown as GitHubServiceWithPRMethods).getPullRequestComments(prNum),
     ]);
 
     spinner.succeed("PR analysis complete");
@@ -168,25 +206,25 @@ export async function fixPRCommand(prNumber: string) {
     );
 
     console.log("\n" + chalk.dim("=".repeat(60)));
-  } catch (error: any) {
+  } catch (error: unknown) {
     spinner.fail("Failed to analyze PR");
-    console.error(chalk.red("\nError:"), error.message);
+    console.error(chalk.red("\nError:"), error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
 
 function generateActionItems(
-  _prDetails: any,
-  status: any,
-  comments: any[],
+  _prDetails: PRDetails,
+  status: PRStatus,
+  comments: PRComment[],
 ): ActionItem[] {
   const items: ActionItem[] = [];
 
   // 1. Status check failures (highest priority)
   const failedChecks = status.checks.filter(
-    (c: any) => c.conclusion === "failure",
+    (c) => c.conclusion === "failure",
   );
-  failedChecks.forEach((check: any, index: number) => {
+  failedChecks.forEach((check, index: number) => {
     items.push({
       id: `status_${index}`,
       type: "status_check",
@@ -212,9 +250,9 @@ function generateActionItems(
 
   // 3. Requested changes from reviews (high priority)
   const changeRequests = status.reviews.filter(
-    (r: any) => r.state === "CHANGES_REQUESTED",
+    (r) => r.state === "CHANGES_REQUESTED",
   );
-  changeRequests.forEach((review: any, index: number) => {
+  changeRequests.forEach((review, index: number) => {
     items.push({
       id: `review_${index}`,
       type: "review_change",
@@ -250,7 +288,7 @@ function generateActionItems(
 
   // 5. Pending status checks (lower priority but worth noting)
   const pendingChecks = status.checks.filter(
-    (c: any) => c.status === "in_progress" || c.status === "queued",
+    (c) => c.status === "in_progress" || c.status === "queued",
   );
   if (pendingChecks.length > 0) {
     items.push({
@@ -259,7 +297,7 @@ function generateActionItems(
       priority: 1,
       title: `Wait for ${pendingChecks.length} pending check(s) to complete`,
       description: "Some status checks are still running",
-      details: pendingChecks.map((c: any) => c.name).join(", "),
+      details: pendingChecks.map((c) => c.name).join(", "),
     });
   }
 
