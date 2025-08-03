@@ -143,6 +143,7 @@ export async function createPRCommand(storyId: string) {
       
       // Suggest available stories
       try {
+        const localService = new LocalGitHubService();
         const stories = await localService.listStories();
         if (stories.length > 0) {
           console.log('\n' + chalk.dim('Available stories:'));
@@ -165,7 +166,7 @@ function generatePRTitle(story: StoryData): string {
   return `${story.type === 'bug' ? 'Fix' : 'Add'}: ${story.title} (#${story.id})`;
 }
 
-function generatePRBody(story: StoryData): string {
+function generatePRBody(story: any): string {
   let body = `## 📋 Story: ${story.title}\n\n`;
   body += `**Type:** ${story.type}\n`;
   body += `**Feature:** #${story.featureId}\n`;
@@ -177,7 +178,7 @@ function generatePRBody(story: StoryData): string {
 
   if (story.tasks && story.tasks.length > 0) {
     body += `### Tasks Completed\n\n`;
-    story.tasks.forEach((task, index) => {
+    story.tasks.forEach((task: any) => {
       const status = task.completed ? '✅' : '⬜';
       body += `${status} ${task.description}`;
       if (task.prNumber) {
@@ -186,7 +187,7 @@ function generatePRBody(story: StoryData): string {
       body += '\n';
     });
     
-    const completed = story.tasks.filter(t => t.completed).length;
+    const completed = story.tasks.filter((t: any) => t.completed).length;
     const total = story.tasks.length;
     body += `\n**Progress:** ${completed}/${total} tasks completed\n`;
   }

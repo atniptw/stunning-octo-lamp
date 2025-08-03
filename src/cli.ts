@@ -3,9 +3,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { config } from 'dotenv';
-import { analyzeCommand } from './commands/analyze.js';
-import { generateStoryCommand } from './commands/generate-story.js';
-import { validateStoryCommand } from './commands/validate-story.js';
+// Removed unused imports
 
 // Load environment variables
 config();
@@ -84,6 +82,22 @@ program
   .action(async (storyId: string) => {
     const { createPRMCPCommand } = await import('./commands/create-pr-mcp.js');
     await createPRMCPCommand(storyId);
+  });
+
+program
+  .command('check-pr <prNumber>')
+  .description('Check pull request status, comments, and reviews')
+  .action(async (prNumber: string) => {
+    const { checkPRCommand } = await import('./commands/check-pr.js');
+    await checkPRCommand(prNumber);
+  });
+
+program
+  .command('comment-pr <prNumber> <message>')
+  .description('Add a comment to a pull request')
+  .action(async (prNumber: string, message: string) => {
+    const { commentPRCommand } = await import('./commands/comment-pr.js');
+    await commentPRCommand(prNumber, message);
   });
 
 // MCP tools command

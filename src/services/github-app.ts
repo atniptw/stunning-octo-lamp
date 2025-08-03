@@ -1,7 +1,7 @@
 import { createAppAuth } from '@octokit/auth-app';
 import { Octokit } from '@octokit/rest';
 import { readFileSync } from 'fs';
-import type { IssueData } from '../types/story.js';
+// IssueData type not needed for GitHub App service
 
 export class GitHubAppService {
   private octokit: Octokit;
@@ -55,7 +55,14 @@ export class GitHubAppService {
     });
   }
 
-  async fetchIssue(issueId: string): Promise<IssueData> {
+  async fetchIssue(issueId: string): Promise<{
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    labels: string[];
+    assignee?: string;
+  }> {
     try {
       const issueNumber = parseInt(issueId.replace(/[^0-9]/g, ''));
 
@@ -166,9 +173,59 @@ export class GitHubAppService {
     });
   }
 
+  async getPullRequestDetails(prNumber: number): Promise<{
+    number: number;
+    title: string;
+    state: string;
+    mergeable: boolean | null;
+    mergeable_state: string;
+    html_url: string;
+    head: { sha: string; ref: string };
+    base: { ref: string };
+    user: { login: string };
+    created_at: string;
+    updated_at: string;
+  }> {
+    try {
+      const { data: pr } = await this.octokit.pulls.get({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number: prNumber,
+      });
+
+      return {
+        number: pr.number,
+        title: pr.title,
+        state: pr.state,
+        mergeable: pr.mergeable,
+        mergeable_state: pr.mergeable_state,
+        html_url: pr.html_url,
+        head: { sha: pr.head.sha, ref: pr.head.ref },
+        base: { ref: pr.base.ref },
+        user: { login: pr.user?.login || 'unknown' },
+        created_at: pr.created_at,
+        updated_at: pr.updated_at,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to get PR details: ${error.message}`);
+    }
+  }
+
   async checkPullRequestStatus(prNumber: number): Promise<{
-    mergeable: boolean;
-    checks: Array<{ name: string; status: string; conclusion: string | null }>;
+    mergeable: boolean | null;
+    mergeable_state: string;
+    checks: Array<{ 
+          name: string; 
+          status: string; 
+          conclusion: string | null;
+          html_url: string;
+          details_url?: string;
+        }>;
+    reviews: Array<{
+      user: string;
+      state: string;
+      submitted_at: string;
+    }>;
   }> {
     try {
       // Get PR details
@@ -185,16 +242,82 @@ export class GitHubAppService {
         ref: pr.head.sha,
       });
 
+      // Get reviews
+      const { data: reviews } = await this.octokit.pulls.listReviews({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number: prNumber,
+      });
+
       return {
-        mergeable: pr.mergeable === true,
+        mergeable: pr.mergeable,
+        mergeable_state: pr.mergeable_state,
         checks: checks.check_runs.map((check) => ({
           name: check.name,
           status: check.status,
           conclusion: check.conclusion,
+          html_url: check.html_url || '',
+          details_url: check.details_url || undefined,
+        })),
+        reviews: reviews.map((review) => ({
+          user: review.user?.login || 'unknown',
+          state: review.state,
+          submitted_at: review.submitted_at || '',
         })),
       };
     } catch (error: any) {
       throw new Error(`Failed to check PR status: ${error.message}`);
+    }
+  }
+
+  async getPullRequestComments(prNumber: number): Promise<Array<{
+    id: number;
+    user: string;
+    body: string;
+    created_at: string;
+    html_url: string;
+    is_review_comment: boolean;
+  }>> {
+    try {
+      // Get issue comments (general PR comments)
+      const { data: issueComments } = await this.octokit.issues.listComments({
+        owner: this.owner,
+        repo: this.repo,
+        issue_number: prNumber,
+      });
+
+      // Get review comments (code-specific comments)
+      const { data: reviewComments } = await this.octokit.pulls.listReviewComments({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number: prNumber,
+      });
+
+      const allComments = [
+        ...issueComments.map(comment => ({
+          id: comment.id,
+          user: comment.user?.login || 'unknown',
+          body: comment.body || '',
+          created_at: comment.created_at,
+          html_url: comment.html_url,
+          is_review_comment: false,
+        })),
+        ...reviewComments.map(comment => ({
+          id: comment.id,
+          user: comment.user?.login || 'unknown', 
+          body: comment.body || '',
+          created_at: comment.created_at,
+          html_url: comment.html_url,
+          is_review_comment: true,
+        })),
+      ];
+
+      // Sort by creation date
+      return allComments.sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    } catch (error: any) {
+      throw new Error(`Failed to get PR comments: ${error.message}`);
     }
   }
 
