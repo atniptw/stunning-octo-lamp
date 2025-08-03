@@ -13,6 +13,25 @@ export interface AnalysisResult {
 }
 
 export class AnalysisService {
+  async analyzeRequirement(requirement: {
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    labels: string[];
+  }): Promise<AnalysisResult> {
+    // Convert issue data to feature-like format for analysis
+    const featureData: FeatureData = {
+      id: requirement.id,
+      title: requirement.title,
+      description: requirement.description,
+      url: requirement.url,
+      labels: requirement.labels,
+    };
+    
+    return this.analyzeFeature(featureData);
+  }
+
   async analyzeFeature(feature: FeatureData): Promise<AnalysisResult> {
     // For MVP, we'll do basic pattern matching
     // Later this will use AI to analyze the requirement

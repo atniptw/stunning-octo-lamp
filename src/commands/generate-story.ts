@@ -21,7 +21,13 @@ export async function generateStoryCommand(
 
   try {
     // Fetch issue data (same logic as analyze command)
-    let issueData: IssueData;
+    let issueData: {
+      id: string;
+      title: string;
+      description: string;
+      url: string;
+      labels: string[];
+    };
 
     if (options.source === "github") {
       const useLocal =

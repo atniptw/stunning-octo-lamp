@@ -8,7 +8,6 @@ import { LocalGitHubService } from "../services/local-github.js";
 import { AnalysisService } from "../services/analysis.js";
 import { StoryGeneratorService } from "../services/story-generator.js";
 import type { FeatureData, StoryType } from "../types/story.js";
-import type { AnalysisResult } from "../services/analysis.js";
 
 interface CreateStoriesOptions {
   source: string;

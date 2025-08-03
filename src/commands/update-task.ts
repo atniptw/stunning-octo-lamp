@@ -2,7 +2,7 @@ import chalk from "chalk";
 import ora from "ora";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
-import { confirm, input, select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import { LocalGitHubService } from "../services/local-github.js";
 import type { StoryData } from "../types/story.js";
 

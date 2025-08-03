@@ -72,6 +72,24 @@ export class GitHubService {
     }
   }
 
+  async fetchFeature(featureId: string): Promise<{
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    labels: string[];
+  }> {
+    // For GitHub integration, features are stored as issues
+    const issueData = await this.fetchIssue(featureId);
+    return {
+      id: issueData.id,
+      title: issueData.title,
+      description: issueData.description,
+      url: issueData.url,
+      labels: issueData.labels,
+    };
+  }
+
   async updateIssueStatus(issueId: string, status: "in-progress" | "ready") {
     // This would update labels or project board status
     // For MVP, we'll just add a comment

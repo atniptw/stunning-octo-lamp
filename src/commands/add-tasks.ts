@@ -294,7 +294,6 @@ async function updateStoryWithTasks(
   const lines = storyContent.split("\n");
   const updatedLines: string[] = [];
   let inTasksSection = false;
-  let tasksInserted = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -325,13 +324,10 @@ async function updateStoryWithTasks(
 
       // Add new tasks
       updatedLines.push("");
-      newTasks.forEach((task, index) => {
-        const taskId = (storyData.tasks?.length || 0) + index + 1;
+      newTasks.forEach((task) => {
         const checkbox = task.completed ? "[x]" : "[ ]";
         updatedLines.push(`- ${checkbox} ${task.description}`);
       });
-
-      tasksInserted = true;
 
       // Skip existing task lines
       while (
