@@ -116,6 +116,31 @@ npm run dev -- comment-pr 1 "Thanks for the review!"
 - 💬 Recent comments and discussions
 - 🎯 Clear next-step recommendations
 
+### Developer PR Cycle
+
+```bash
+# 1. Get prioritized list of issues to fix
+npm run dev -- fix-pr <prNumber>
+
+# 2. Fix issues one by one, commit and push
+# Make your changes locally, then:
+npm run dev -- push-changes "Fix: description of what was fixed"
+
+# 3. Reply to comments with commit hash
+npm run dev -- reply-comment <prNumber> <commentId> <commitHash>
+
+# 4. Check if fixes worked
+npm run dev -- check-pr <prNumber>
+
+# 5. Repeat until all issues resolved
+```
+
+**Priority System:**
+- 🚨 **CRITICAL**: Failed status checks, merge conflicts (blocks merge)
+- ⚠️ **HIGH**: Review change requests (blocks approval)  
+- 📝 **MEDIUM**: Code review comments (feedback to address)
+- ⏳ **LOW**: Pending checks (wait for completion)
+
 ## Development
 
 ```bash
@@ -193,8 +218,10 @@ Implement stories with clear boundaries and tracking:
 2. **Add Tasks** - `workflow add-tasks <storyId>`
 3. **Update Progress** - `workflow update-task <storyId> <taskNumber>`
 4. **Create PR** - `workflow create-pr <storyId>`
-5. **Monitor PR** - `workflow check-pr <prNumber>`
-6. **Engage** - `workflow comment-pr <prNumber> "<message>"`
+5. **Fix Issues** - `workflow fix-pr <prNumber>` (prioritized action items)
+6. **Address Feedback** - Make changes → `workflow push-changes` → `workflow reply-comment <prNumber> <commentId>`
+7. **Monitor Status** - `workflow check-pr <prNumber>`
+8. **Repeat** until ready to merge
 
 ## Documentation
 
